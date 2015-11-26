@@ -57,6 +57,8 @@
   ([cred bucket-name file-map]
    (sync! bucket-name file-map {}))
   ([cred bucket-name file-map {:keys [report-fn prune? dry-run?]}]
+   (assert (and (string? (:access-key cred))
+                (string? (:secret-key cred))) cred)
    (let [report* (or report-fn (fn [_]))
          {:keys [added changed removed] :as diff}
          (diff* (get-bucket-objects cred bucket-name) file-map)]
