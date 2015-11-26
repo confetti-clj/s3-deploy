@@ -23,7 +23,7 @@ Get the difference between objects in a S3 bucket and files on disk.
 
 ---
 
-`(confetti.s3-deploy/sync! bucket-name file-map opts)`
+`(confetti.s3-deploy/sync! cred bucket-name file-map opts)`
 
 Sync files in `file-map` to S3 bucket `bucket-name`. Optional `opts` argument is a map with the following keys:
 
