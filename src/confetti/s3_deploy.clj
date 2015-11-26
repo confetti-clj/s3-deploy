@@ -6,10 +6,15 @@
             [digest :as dig]
             [amazonica.aws.s3 :as s3]))
 
+(defn validate-creds! [cred]
+  (assert (and (string? (:access-key cred))
+               (string? (:secret-key cred))) cred))
+
 (defn relative-path [dir f]
   (string/replace (.getPath f) (re-pattern (str (.getPath dir) "/")) ""))
 
 (defn get-bucket-objects [cred bucket-name]
+  (validate-creds! cred)
   (:object-summaries (s3/list-objects cred :bucket-name bucket-name)))
 
 (defn dir->file-map
@@ -57,8 +62,7 @@
   ([cred bucket-name file-map]
    (sync! bucket-name file-map {}))
   ([cred bucket-name file-map {:keys [report-fn prune? dry-run?]}]
-   (assert (and (string? (:access-key cred))
-                (string? (:secret-key cred))) cred)
+   (validate-creds! cred)
    (let [report* (or report-fn (fn [_]))
          {:keys [added changed removed] :as diff}
          (diff* (get-bucket-objects cred bucket-name) file-map)]
