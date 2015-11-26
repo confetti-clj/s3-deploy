@@ -1,3 +1,5 @@
+<img src="https://cloud.githubusercontent.com/assets/97496/11431670/0ef1bb58-949d-11e5-83f7-d07cf1dd89c7.png" alt="confetti logo" align="right" />
+
 # confetti/s3-deploy
 
 Simple utility functions to diff and sync local files with S3 buckets. *(50LOC)*

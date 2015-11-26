@@ -4,7 +4,7 @@
                  [amazonica/amazonica "0.3.33"]
                  [digest "1.4.4"]])
 
-(require '[adzerk.bootlaces :refer [bootlaces! build-jar]])
+(require '[adzerk.bootlaces :refer [bootlaces! build-jar push-snapshot push-release]])
 
 (def +version+ "0.1.0-SNAPSHOT")
 (bootlaces! +version+)
