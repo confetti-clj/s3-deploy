@@ -12,4 +12,6 @@
 (task-options!
  pom {:project     'confetti/s3-deploy
       :version     +version+
-      :description "Push things to S3, but be lazy about it."})
+      :description "Push things to S3, but be lazy about it."
+      :url         "https://github.com/confetti/s3-deploy"
+      :scm         {:url "https://github.com/confetti/s3-deploy"}})
