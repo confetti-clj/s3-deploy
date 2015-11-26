@@ -57,21 +57,21 @@
   ([cred bucket-name file-map]
    (sync! bucket-name file-map {}))
   ([cred bucket-name file-map {:keys [report-fn prune? dry-run?]}]
-   (let [report* (or report-fn (fn [_ _]))
+   (let [report* (or report-fn (fn [_]))
          {:keys [added changed removed] :as diff}
          (diff* (get-bucket-objects cred bucket-name) file-map)]
      (doseq [k (keys added)
              :let [f (get file-map k)]]
-       (report* ::added {:s3-key k :file f})
+       (report* {:type ::added :s3-key k :file f})
        (when-not dry-run?
          (s3/put-object cred bucket-name k f)))
      (when prune?
        (doseq [k (keys removed)]
-         (report* ::removed {:s3-key k})
+         (report* {:type ::removed :s3-key k})
          #_"TODO DELETION"))
      (doseq [k (keys changed)
              :let [f (get file-map k)]]
-       (report* ::changed {:s3-key k :file f})
+       (report* {:type ::changed :s3-key k :file f})
        (when-not dry-run?
          (s3/put-object cred bucket-name k f))))))
 
