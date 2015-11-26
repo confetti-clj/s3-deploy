@@ -9,15 +9,15 @@
 (defn relative-path [dir f]
   (string/replace (.getPath f) (re-pattern (str (.getPath dir) "/")) ""))
 
-(defn get-bucket-objects [bucket-name]
-  (:object-summaries (s3/list-objects :bucket-name bucket-name)))
+(defn get-bucket-objects [cred bucket-name]
+  (:object-summaries (s3/list-objects cred :bucket-name bucket-name)))
 
 (defn dir->file-map
   "Create a file-map as it's expected by `diff*` from
    a local directory."
   [dir]
   (into {}
-        (for [f (filter #(.isFile %) (file-seq d))]
+        (for [f (filter #(.isFile %) (file-seq dir))]
           [(relative-path dir f) f])))
 
 (defn ^:private bucket-objects->diff-set [bucket-objects]
@@ -54,22 +54,26 @@
      for each added and changed file being uploaded to S3.
    - if `prune?` is a truthy value `sync!` will delete files
      from the S3 bucket that are not in `file-map`."
-  ([bucket-name file-map]
+  ([cred bucket-name file-map]
    (sync! bucket-name file-map {}))
-  ([bucket-name file-map {:keys [report-fn prune?]}]
-   (let [{:keys [added changed removed] :as diff}
-         (diff* (get-bucket-objects bucket-name) file-map)]
+  ([cred bucket-name file-map {:keys [report-fn prune? dry-run?]}]
+   (let [report* (or report-fn (fn [_ _]))
+         {:keys [added changed removed] :as diff}
+         (diff* (get-bucket-objects cred bucket-name) file-map)]
      (doseq [k (keys added)
              :let [f (get file-map k)]]
-       (report-fn ::added {:s3-key k :file f})
-       (s3/put-object bucket-name k f))
+       (report* ::added {:s3-key k :file f})
+       (when-not dry-run?
+         (s3/put-object cred bucket-name k f)))
      (when prune?
        (doseq [k (keys removed)]
-         (report-fn ::removed {:s3-key k})))
+         (report* ::removed {:s3-key k})
+         #_"TODO DELETION"))
      (doseq [k (keys changed)
              :let [f (get file-map k)]]
-       (report-fn ::changed {:s3-key k :file f})
-       (s3/put-object bucket-name k f)))))
+       (report* ::changed {:s3-key k :file f})
+       (when-not dry-run?
+         (s3/put-object cred bucket-name k f))))))
 
 (comment
   (def bucket "www.martinklepsch.org")
