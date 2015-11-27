@@ -4,6 +4,7 @@
             [clojure.data :as data]
             [clojure.string :as string]
             [digest :as dig]
+            [amazonica.aws.cloudfront :as cf]
             [amazonica.aws.s3 :as s3]))
 
 (defn validate-creds! [cred]
@@ -132,6 +133,16 @@
       :deleted #{}, :unchanged #{}}
      ops))))
 
+(defn cloudfront-invalidate!
+  "Create an invalidation for `paths` in `dist`."
+  [cred distribution-id paths]
+  (cf/create-invalidation
+   cred
+   :distribution-id distribution-id
+   :invalidation-batch {:paths {:items    paths
+                                :quantity (count paths)}
+                        :caller-reference (str (java.util.UUID/randomUUID))}))
+
 (comment
   (def bucket "my-website-fsd-com-confetti-static-sit-sitebucket-1wtc4vo9fmlc5")
   (def creds (read-string (slurp "aws-cred.edn")))
@@ -158,6 +169,9 @@
   (sync! creds bucket (reverse (dir->file-maps d))
          {:dry-run?  true
           :report-fn confetti.report/s3-report})
+
+  (invalidate! creds "E12QOFOQTRE6O6" ["/confetti/report.clj"])
+  (cf/get-invalidation :distribution-id "E12QOFOQTRE6O6" :id "I27L7VP8XR8OE2")
 
   (def d (io/file "../confetti/src"))
 
