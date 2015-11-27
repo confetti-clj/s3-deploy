@@ -2,7 +2,7 @@
 
 # confetti/s3-deploy
 
-Simple utility functions to diff and sync local files with S3 buckets. *(50LOC)*
+Simple utility functions to diff and sync local files with S3 buckets. *(100LOC)*
 
 [](dependency)
 ```clojure
@@ -15,7 +15,7 @@ Simple utility functions to diff and sync local files with S3 buckets. *(50LOC)*
 - a simple data-driven API to sync local files to an S3 bucket
 - useful reporting capabilities to inform users about the sync process
 - sync metadata and provide versatile ways to specify it **(TBD)**
-- allow some ordering of uploads to get "fake-transactionality" **(TBD)**
+- allow some ordering of uploads to get "fake-transactionality"
 
 ## Walkthrough
 
@@ -23,7 +23,7 @@ To get a diff between an S3 bucket and local files use `confetti.s3-deploy/diff*
 
 ---
 
-`(confetti.s3-deploy/diff* bucket-objects file-map)`
+`(confetti.s3-deploy/diff* bucket-objects file-maps)`
 
 Get the difference between objects in a S3 bucket and files on disk.
 
@@ -32,18 +32,21 @@ Get the difference between objects in a S3 bucket and files on disk.
 
 ---
 
-`(confetti.s3-deploy/sync! cred bucket-name file-map opts)`
+`(confetti.s3-deploy/sync! cred bucket-name file-maps opts)`
 
-Sync files in `file-map` to S3 bucket `bucket-name`. Optional `opts` argument is a map with the following keys:
+Sync files in `file-maps` to S3 bucket `bucket-name`. A single `file-map` should look like `{:s3-key "file.txt" :file java.io.File}`.
+The ordering of items in `file-maps` is respected when syncing files. Deleted files are always synced last.
+
+Optional `opts` argument is a map with the following keys:
 
 - `report-fn` takes 2 arguments (type, data) will be called for each added and changed file being uploaded to S3.
 - if `prune?` is a truthy value `sync!` will delete files from the S3 bucket that are not in `file-map`.
 
 --- 
 
- `file-map`
+ `file-maps`
 
-`file-map` is a simple map construct that makes the API of this
+A `file-map` is a simple map construct that makes the API of this
 library very minimal and versatile at the same time. `file-map`s
 have the following structure: `{s3-key java.io.File}`. An example
 implementation to get a `file-map` for a given directory can be found
