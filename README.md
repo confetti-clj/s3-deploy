@@ -10,6 +10,13 @@ Simple utility functions to diff and sync local files with S3 buckets. *(50LOC)*
 ```
 [](/dependency)
 
+## Goals
+
+- a simple data-driven API to sync local files to an S3 bucket
+- useful reporting capabilities to inform users about the sync process
+- sync metadata and provide versatile ways to specify it **(TBD)**
+- allow some ordering of uploads to get "fake-transactionality" **(TBD)**
+
 ## Walkthrough
 
 To get a diff between an S3 bucket and local files use `confetti.s3-deploy/diff*`. To actually sync files use `confetti.s3-deploy/sync!`.
