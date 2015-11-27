@@ -54,32 +54,33 @@
      :removed   removed
      :unchanged in-sync}))
 
+(defn dedupe-diff
+  "Remove all keys that are in the changed map from the removed map."
+  [{:keys [changed removed] :as diff}]
+  (let [changed-set   (-> changed keys set)
+        truly-deleted (-> removed keys set (s/difference changed-set))]
+    (update diff :removed select-keys truly-deleted)))
+
 (defn ->op
-  "Given a diff and a key return the required operation to sync
-
-   NOTE: If diff would not return overlapping `changed` and `removed`
-   values this function would be much simpler."
+  "Given a diff and a key return the required operation to sync"
   [diff s3-key]
-  (let [added?     (-> (:added diff) keys set)
-        changed?   (-> (:changed diff) keys set)
-        removed?   (-> (:removed diff) keys set (s/difference changed?))
-        unchanged? (-> (:unchanged diff) keys set)]
-    (cond (added? s3-key)     ::upload
-          (changed? s3-key)   ::update
-          (removed? s3-key)   ::delete
-          (unchanged? s3-key) ::no-op
+  (let [in?    (fn [k] (get-in diff [k s3-key]))]
+    (cond (in? :added)     ::upload
+          (in? :changed)   ::update
+          (in? :removed)   ::delete
+          (in? :unchanged) ::no-op
 
-          :else (throw (ex-info "No op found!" {:s3-key s3-key :diff diff})))))
+          :else (throw (ex-info "No operation found!"
+                                {:s3-key s3-key :diff diff})))))
 
 (defn calculate-ops
   "Generate set of operations to get in sync from a given diff"
   [bucket-objects file-maps]
-  (let [diff    (diff* bucket-objects file-maps)
-        deleted (:removed diff)
-        fm->op  #(assoc % :op (->op diff (:s3-key %)))
-        del->op (fn [[k _]] {:s3-key k :op (->op diff k)})]
+  (let [deduped (dedupe-diff (diff* bucket-objects file-maps))
+        fm->op  #(assoc % :op (->op deduped (:s3-key %)))
+        rm->op  (fn [[k _]] {:s3-key k :op (->op deduped k)})]
     (into (mapv fm->op file-maps)
-          (mapv del->op deleted))))
+          (mapv rm->op (:removed deduped)))))
 
 (defn sync!
   "Sync files described by `file-maps` to S3 `bucket-name`.
@@ -160,10 +161,14 @@
 
   (def d (io/file "../confetti/src"))
 
-  (clojure.pprint/pprint
+  (clojure.pprint/pprint ; plain diff*
    (diff* bucket-objs (dir->file-maps d)))
-  (clojure.pprint/pprint
-   (diff->ops (diff* bucket-objs (dir->file-maps d))))
+
+  (clojure.pprint/pprint ; deduped
+   (dedupe-diff (diff* bucket-objs (dir->file-maps d))))
+
+  (clojure.pprint/pprint ; ops
+   (calculate-ops bucket-objs (dir->file-maps d)))
 
   (file-maps->diff-set (dir->file-maps d))
 
