@@ -76,7 +76,8 @@
      (when prune?
        (doseq [k (keys removed)]
          (report* {:type ::removed :s3-key k})
-         #_"TODO DELETION"))
+         ;; possible optimization: `s3/delete-objects`
+         (s3/delete-object cred bucket-name k)))
      (doseq [k (keys changed)
              :let [f (get file-map k)]]
        (report* {:type ::changed :s3-key k :file f})
