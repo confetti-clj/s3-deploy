@@ -104,13 +104,13 @@
                      (do (report* op)
                          (when-not dry-run?
                            (s3/put-object cred bucket-name s3-key file))
-                         (update stats :uploaded inc))
+                         (update stats :uploaded conj s3-key))
 
                      (= ::update (:op op))
                      (do (report* op)
                          (when-not dry-run?
                            (s3/put-object cred bucket-name s3-key file))
-                         (update stats :updated inc))
+                         (update stats :updated conj s3-key))
 
                      (= ::delete (:op op))
                      (if prune? 
@@ -118,17 +118,17 @@
                            (when-not dry-run?
                              ;; possible optimization: `s3/delete-objects`
                              (s3/delete-object cred bucket-name s3-key))
-                           (update stats :deleted inc))
+                           (update stats :deleted conj s3-key))
                        stats)
 
                      (= ::no-op (:op op))
-                     (update stats :unchanged inc)
+                     (update stats :unchanged conj s3-key)
 
                      :else
                      (throw (ex-info "Unrecognized sync op" op))))
 
-     {:uploaded 0, :updated 0,
-      :deleted 0, :unchanged 0}
+     {:uploaded #{}, :updated #{},
+      :deleted #{}, :unchanged #{}}
      ops))))
 
 (comment
