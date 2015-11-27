@@ -11,7 +11,9 @@
                (string? (:secret-key cred))) cred))
 
 (defn relative-path [dir f]
-  (string/replace (.getPath f) (re-pattern (str (.getPath dir) "/")) ""))
+  (string/replace (.getCanonicalPath f)
+                  (re-pattern (str (.getCanonicalPath dir) "/"))
+                  ""))
 
 (defn get-bucket-objects [cred bucket-name]
   (validate-creds! cred)
