@@ -54,8 +54,11 @@
      :removed   removed
      :unchanged in-sync}))
 
-(defn op
-  ""
+(defn ->op
+  "Given a diff and a key return the required operation to sync
+
+   NOTE: If diff would not return overlapping `changed` and `removed`
+   values this function would be much simpler."
   [diff s3-key]
   (let [added?     (-> (:added diff) keys set)
         changed?   (-> (:changed diff) keys set)
@@ -73,8 +76,8 @@
   [bucket-objects file-maps]
   (let [diff    (diff* bucket-objects file-maps)
         deleted (:removed diff)
-        fm->op  #(assoc % :op (op diff (:s3-key %)))
-        del->op (fn [[k _]] {:s3-key k :op (op diff k)})]
+        fm->op  #(assoc % :op (->op diff (:s3-key %)))
+        del->op (fn [[k _]] {:s3-key k :op (->op diff k)})]
     (into (mapv fm->op file-maps)
           (mapv del->op deleted))))
 
