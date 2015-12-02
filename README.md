@@ -14,55 +14,46 @@ Simple utility functions to diff and sync local files with S3 buckets. *(100LOC)
 
 - a simple data-driven API to sync local files to an S3 bucket
 - useful reporting capabilities to inform users about the sync process
-- sync metadata and provide versatile ways to specify it **(TBD)**
 - allow some ordering of uploads to get "fake-transactionality"
+- allow specification of custom metadata
 
-## Walkthrough
+## Usage
 
-To get a diff between an S3 bucket and local files use `confetti.s3-deploy/diff*`. To actually sync files use `confetti.s3-deploy/sync!`.
-
----
-
-`(confetti.s3-deploy/diff* bucket-objects file-maps)`
-
-Get the difference between objects in a S3 bucket and files on disk.
-
-- `bucket-objects` is expected to be a list bucket object summaries as they are returned by `amazonica.aws.s3/list-objects`.
-- `file-map` is expected to be a map of `{s3-key java.io.File}`, where s3-key is the desired location in the S3 bucket.
-
----
-
-`(confetti.s3-deploy/sync! cred bucket-name file-maps opts)`
-
-Sync files in `file-maps` to S3 bucket `bucket-name`. A single `file-map` should look like `{:s3-key "file.txt" :file java.io.File}`.
-The ordering of items in `file-maps` is respected when syncing files. Deleted files are always synced last.
-
-Optional `opts` argument is a map with the following keys:
-
-- `report-fn` takes 2 arguments (type, data) will be called for each added and changed file being uploaded to S3.
-- if `prune?` is a truthy value `sync!` will delete files from the S3 bucket that are not in `file-map`.
-
---- 
-
- `file-maps`
-
-A `file-map` is a simple map construct that makes the API of this
-library very minimal and versatile at the same time. `file-map`s
-have the following structure: `{s3-key java.io.File}`. An example
-implementation to get a `file-map` for a given directory can be found
-below and is provided as `(confetti.s3-deploy/dir->file-map java.io.File`).
-
+Most functions that are part of the public API of this library operate
+on simple maps like the following, furthermore called `file-maps`:
 ```clojure
-(defn relative-path [dir f]
-  (string/replace (.getPath f) (re-pattern (str (.getPath dir) "/")) ""))
-
-(defn dir->file-map
-  "Create a file-map as it's expected by `diff*` from a local directory."
-  [dir]
-  (into {}
-        (for [f (filter #(.isFile %) (file-seq d))]
-          [(relative-path dir f) f])))
+{:s3-key   "desired/destination/file.txt"
+ :file     #object[java.io.File "file.txt.gz"]
+ :metadata {:content-encoding "gzip"}}
 ```
+By using `file-maps` we decouple the structure of the filesystem from
+the structure we ultimately want to achieve in our target S3 bucket.
+
+Syncing is possible via `confetti.s3-deploy/sync!`:
+```clojure
+(confetti.s3-deploy/sync! creds bucket-name file-maps)
+```
+To generate `file-maps` from a directory this library ships a tiny
+helper `dir->file-maps` that will generate file-maps:
+```clojure
+(dir->file-maps (io/file "src"))
+;;=> [{:s3-key "confetti/s3_deploy.clj",
+;;     :file   #object[java.io.File 0x4795c68f "/Users/martin/code/confetti-s3-deploy/src/confetti/s3_deploy.clj"]}]
+```
+Depending on your use case you will want to build your own `file-maps`
+generating function. Lower level functions are available as well:
+```
+(confetti.s3-deploy/diff* bucket-objects file-maps)
+```
+Can be used to get a diff between a buckets objects and a given collection
+of `file-maps`.
+```
+(confetti.s3-deploy/calculate-ops bucket-objects file-maps)
+```
+Will return a vector of operations needed to get the bucket in sync with
+the supplied `file-maps`.
+
+For more details check [the implementation](https://github.com/confetti-clj/s3-deploy/blob/master/src/confetti/s3_deploy.clj).
 
 ## License
 
