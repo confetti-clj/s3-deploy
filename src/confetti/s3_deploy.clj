@@ -1,12 +1,19 @@
 (ns confetti.s3-deploy
   (:require [clojure.java.io :as io]
-            [clojure.set :as s]
+            [clojure.set :as cset]
             [clojure.data :as data]
             [clojure.string :as string]
             [digest :as dig]
+            [schema.core :as s]
             [pantomime.mime :as panto]
             [amazonica.aws.cloudfront :as cf]
             [amazonica.aws.s3 :as s3]))
+
+(def FileMap
+  "Schema for file-maps"
+  {:s3-key                    s/Str
+   :file                      java.io.File
+   (s/optional-key :metadata) (s/maybe {s/Keyword s/Str})})
 
 (defn validate-creds! [cred]
   (assert (and (string? (:access-key cred))
@@ -47,6 +54,7 @@
 
    - `file-maps` is a seq of maps containing the following keys: s3-key, file."
   [bucket-objects file-maps]
+  (s/validate [FileMap] file-maps)
   (let [on-s3?   #((set (map :key bucket-objects)) (key %))
         on-s3    (bucket-objects->diff-set bucket-objects)
         on-fs    (file-maps->diff-set file-maps)
@@ -60,7 +68,7 @@
   "Remove all keys that are in the changed map from the removed map."
   [{:keys [changed removed] :as diff}]
   (let [changed-set   (-> changed keys set)
-        truly-deleted (-> removed keys set (s/difference changed-set))]
+        truly-deleted (-> removed keys set (cset/difference changed-set))]
     (update diff :removed select-keys truly-deleted)))
 
 (defn ->op
@@ -78,6 +86,7 @@
 (defn calculate-ops
   "Generate set of operations to get in sync from a given diff"
   [bucket-objects file-maps]
+  (s/validate [FileMap] file-maps)
   (let [deduped (dedupe-diff (diff* bucket-objects file-maps))
         fm->op  #(assoc % :op (->op deduped (:s3-key %)))
         rm->op  (fn [[k _]] {:s3-key k :op (->op deduped k)})]
@@ -113,6 +122,7 @@
    (sync! bucket-name file-maps {}))
   ([cred bucket-name file-maps {:keys [report-fn prune? dry-run?]}]
    (validate-creds! cred)
+   (s/validate [FileMap] file-maps)
    (let [report*   (or report-fn (fn [_]))
          upload*   (partial upload cred bucket-name)
          objs      (get-bucket-objects cred bucket-name)
