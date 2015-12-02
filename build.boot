@@ -2,8 +2,8 @@
  :source-paths   #{"src"}
  :dependencies '[[adzerk/bootlaces "0.1.11" :scope "test"]
                  [org.clojure/clojure "1.7.0" :scope "provided"]
-                 [com.novemberain/pantomime "2.7.0"]
                  [amazonica/amazonica "0.3.33"]
+                 [com.novemberain/pantomime "2.7.0" :exclusions [org.apache.httpcomponents/httpcore]]
                  [digest "1.4.4"]])
 
 (require '[adzerk.bootlaces :refer [bootlaces! build-jar push-snapshot push-release]])
