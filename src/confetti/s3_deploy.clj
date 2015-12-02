@@ -99,6 +99,10 @@
    Optionally a `:metadata` key can be supplied to add custom
    metadata to the uploaded S3 object.
 
+   Changes to an objects metadata will only get updated if also
+   the object itself changed, i.e. changes only to an objects
+   metadata will not cause the remote object to get updated.
+
    Recognized options:
    - `report-fn` takes 2 arguments (type, data) will be called
      for each added and changed file being uploaded to S3.
