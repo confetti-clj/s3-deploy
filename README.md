@@ -2,7 +2,7 @@
 
 # confetti/s3-deploy
 
-Simple utility functions to diff and sync local files with S3 buckets. *(100LOC)*
+Simple utility functions to diff and sync local files with S3 buckets.
 
 [](dependency)
 ```clojure
