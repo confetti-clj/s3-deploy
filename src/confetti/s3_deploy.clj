@@ -170,6 +170,7 @@
                         :caller-reference (str (java.util.UUID/randomUUID))}))
 
 (comment
+  (def d (io/file "/Users/martin/code/martinklepsch.org/content"))
   (def bucket "my-website-fsd-com-confetti-static-sit-sitebucket-1wtc4vo9fmlc5")
   (def creds (read-string (slurp "aws-cred.edn")))
   (def bucket-objs (get-bucket-objects creds bucket))
@@ -192,9 +193,9 @@
   (clojure.pprint/pprint
    (file-maps->diff-set (dir->file-maps d)))
 
-  (sync! creds bucket (reverse (dir->file-maps d))
-         {:dry-run?  true
-          :report-fn confetti.report/s3-report})
+  (take 2 (dir->file-maps d))
+
+  (sync! creds bucket (dir->file-maps d) {:report-fn println})
 
   (invalidate! creds "E12QOFOQTRE6O6" ["/confetti/report.clj"])
   (cf/get-invalidation :distribution-id "E12QOFOQTRE6O6" :id "I27L7VP8XR8OE2")
