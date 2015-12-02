@@ -1,6 +1,8 @@
 (set-env!
  :source-paths   #{"src"}
  :dependencies '[[adzerk/bootlaces "0.1.11" :scope "test"]
+                 [org.clojure/clojure "1.7.0"]
+                 [com.novemberain/pantomime "2.7.0"]
                  [amazonica/amazonica "0.3.33"]
                  [digest "1.4.4"]])
 

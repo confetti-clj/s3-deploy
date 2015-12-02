@@ -4,6 +4,7 @@
             [clojure.data :as data]
             [clojure.string :as string]
             [digest :as dig]
+            [pantomime.mime :as panto]
             [amazonica.aws.cloudfront :as cf]
             [amazonica.aws.s3 :as s3]))
 
@@ -83,10 +84,20 @@
     (into (mapv fm->op file-maps)
           (mapv rm->op (:removed deduped)))))
 
+(defn upload [creds bucket key file metadata]
+  (with-open [in (io/input-stream file)]
+    (let [base-meta {:content-type   (panto/mime-type-of file)
+                     :content-length (.length file)}]
+      (s3/put-object creds bucket key in (merge base-meta metadata)))))
+
 (defn sync!
   "Sync files described by `file-maps` to S3 `bucket-name`.
-   The file-maps collection may be odered in which case S3
+   The file-maps collection may be ordered in which case S3
    operations will be executed in the same order.
+
+   `file-maps`need to have the following keys `:s3-key` & `:file`.
+   Optionally a `:metadata` key can be supplied to add custom
+   metadata to the uploaded S3 object.
 
    Recognized options:
    - `report-fn` takes 2 arguments (type, data) will be called
@@ -99,19 +110,20 @@
   ([cred bucket-name file-maps {:keys [report-fn prune? dry-run?]}]
    (validate-creds! cred)
    (let [report*   (or report-fn (fn [_]))
+         upload*   (partial upload cred bucket-name)
          objs      (get-bucket-objects cred bucket-name)
          ops       (calculate-ops objs file-maps)]
-     (reduce (fn [stats {:keys [s3-key file] :as op}]
+     (reduce (fn [stats {:keys [s3-key file metadata] :as op}]
                (cond (= ::upload (:op op))
                      (do (report* op)
                          (when-not dry-run?
-                           (s3/put-object cred bucket-name s3-key file))
+                           (upload* s3-key file metadata))
                          (update stats :uploaded conj s3-key))
 
                      (= ::update (:op op))
                      (do (report* op)
                          (when-not dry-run?
-                           (s3/put-object cred bucket-name s3-key file))
+                           (upload* s3-key file metadata))
                          (update stats :updated conj s3-key))
 
                      (= ::delete (:op op))
