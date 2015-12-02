@@ -42,12 +42,12 @@ helper `dir->file-maps` that will generate file-maps:
 ```
 Depending on your use case you will want to build your own `file-maps`
 generating function. Lower level functions are available as well:
-```
+```clojure
 (confetti.s3-deploy/diff* bucket-objects file-maps)
 ```
 Can be used to get a diff between a buckets objects and a given collection
 of `file-maps`.
-```
+```clojure
 (confetti.s3-deploy/calculate-ops bucket-objects file-maps)
 ```
 Will return a vector of operations needed to get the bucket in sync with
