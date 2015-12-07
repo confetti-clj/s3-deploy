@@ -29,6 +29,9 @@ on simple maps like the following, furthermore called `file-maps`:
 By using `file-maps` we decouple the structure of the filesystem from
 the structure we ultimately want to achieve in our target S3 bucket.
 
+> By default the `:content-type` metadata is derived from the extension
+> of the value you provided as `:s3-key`.
+
 Syncing is possible via `confetti.s3-deploy/sync!`:
 ```clojure
 (confetti.s3-deploy/sync! creds bucket-name file-maps)
