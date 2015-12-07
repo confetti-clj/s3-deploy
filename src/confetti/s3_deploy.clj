@@ -26,7 +26,11 @@
 
 (defn get-bucket-objects [cred bucket-name]
   (validate-creds! cred)
-  (:object-summaries (s3/list-objects cred :bucket-name bucket-name)))
+  (->> (loop [objs [(s3/list-objects creds :bucket-name bucket)]]
+         (if (:truncated? (last objs))
+           (recur (conj objs (s3/list-next-batch-of-objects (last objs)))))
+         objs)
+       (mapcat :object-summaries)))
 
 (defn dir->file-maps
   "Create a file-map as it's expected by `diff*` from a local directory."
