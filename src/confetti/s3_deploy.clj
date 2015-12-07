@@ -95,7 +95,7 @@
 
 (defn upload [creds bucket key file metadata]
   (with-open [in (io/input-stream file)]
-    (let [base-meta {:content-type   (panto/mime-type-of file)
+    (let [base-meta {:content-type   (panto/mime-type-of key)
                      :content-length (.length file)}]
       (s3/put-object creds bucket key in (merge base-meta metadata)))))
 
