@@ -26,10 +26,10 @@
 
 (defn get-bucket-objects [cred bucket-name]
   (validate-creds! cred)
-  (->> (loop [objs [(s3/list-objects creds :bucket-name bucket)]]
+  (->> (loop [objs [(s3/list-objects cred :bucket-name bucket-name)]]
          (if (:truncated? (last objs))
-           (recur (conj objs (s3/list-next-batch-of-objects (last objs)))))
-         objs)
+           (recur (conj objs (s3/list-next-batch-of-objects cred (last objs))))
+           objs))
        (mapcat :object-summaries)))
 
 (defn dir->file-maps
