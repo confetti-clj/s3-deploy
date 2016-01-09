@@ -51,6 +51,16 @@
     (into {} (map ->diff-item) file-maps)))
 
 (defn diff*
+  "Return differences between two diff-sets"
+  [on-s3 on-fs]
+  (let [on-s3?   #((-> on-s3 keys set) (key %))
+        [removed a-or-c in-sync] (data/diff on-s3 on-fs)]
+    {:added     (into {} (remove on-s3? a-or-c))
+     :changed   (into {} (filter on-s3? a-or-c))
+     :removed   (or removed {})
+     :unchanged (or in-sync {})}))
+
+(s/defn diff
   "Get the difference between objects in a S3 bucket and files on disk.
    If a file is changed the old version {key,md5} will be part of the
    `removed` key.
@@ -59,16 +69,10 @@
      summaries as they are returned by `amazonica.aws.s3/list-objects`.
 
    - `file-maps` is a seq of maps containing the following keys: s3-key, file."
-  [bucket-objects file-maps]
-  (s/validate [FileMap] file-maps)
-  (let [on-s3?   #((set (map :key bucket-objects)) (key %))
-        on-s3    (bucket-objects->diff-set bucket-objects)
-        on-fs    (file-maps->diff-set file-maps)
-        [removed a-or-c in-sync] (data/diff on-s3 on-fs)]
-    {:added     (into {} (remove on-s3? a-or-c))
-     :changed   (into {} (filter on-s3? a-or-c))
-     :removed   removed
-     :unchanged in-sync}))
+  [bucket-objects file-maps :- [FileMap]]
+  (let [on-s3    (bucket-objects->diff-set bucket-objects)
+        on-fs    (file-maps->diff-set file-maps)]
+    (diff* on-s3 on-fs)))
 
 (defn dedupe-diff
   "Remove all keys that are in the changed map from the removed map."
@@ -93,7 +97,7 @@
   "Generate set of operations to get in sync from a given diff"
   [bucket-objects file-maps]
   (s/validate [FileMap] file-maps)
-  (let [deduped (dedupe-diff (diff* bucket-objects file-maps))
+  (let [deduped (dedupe-diff (diff bucket-objects file-maps))
         fm->op  #(assoc % :op (->op deduped (:s3-key %)))
         rm->op  (fn [[k _]] {:s3-key k :op (->op deduped k)})]
     (into (mapv fm->op file-maps)
