@@ -1,6 +1,7 @@
 (set-env!
  :source-paths   #{"src"}
  :dependencies '[[adzerk/bootlaces "0.1.13" :scope "test"]
+                 [adzerk/boot-test "1.1.0" :scope "test"]
                  [org.clojure/clojure "1.7.0" :scope "provided"]
                  [prismatic/schema "1.0.3"]
                  [amazonica "0.3.57" :exclusions [com.amazonaws/aws-java-sdk]]
@@ -10,7 +11,8 @@
                  [com.novemberain/pantomime "2.7.0" :exclusions [org.apache.httpcomponents/httpcore]]
                  [digest "1.4.4"]])
 
-(require '[adzerk.bootlaces :refer [bootlaces! build-jar push-snapshot push-release]])
+(require '[adzerk.bootlaces :refer [bootlaces! build-jar push-snapshot push-release]]
+         '[adzerk.boot-test :refer [test]])
 
 (def +version+ "0.1.1")
 (bootlaces! +version+)
