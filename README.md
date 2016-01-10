@@ -57,7 +57,3 @@ Will return a vector of operations needed to get the bucket in sync with
 the supplied `file-maps`.
 
 For more details check [the implementation](https://github.com/confetti-clj/s3-deploy/blob/master/src/confetti/s3_deploy.clj).
-
-## License
-
-TBD
