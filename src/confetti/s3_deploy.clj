@@ -9,11 +9,20 @@
             [amazonica.aws.cloudfront :as cf]
             [amazonica.aws.s3 :as s3]))
 
+;; (s/set-fn-validation! true) ; for easy REPL testing
+;; (defn t [x] (prn x) x)
+
 (def FileMap
   "Schema for file-maps"
   {:s3-key                    s/Str
    :file                      java.io.File
    (s/optional-key :metadata) (s/maybe {s/Keyword s/Str})})
+
+(def BucketObject
+  "Schema for bucket-objects used for diffing"
+  {:key      s/Str
+   :etag     s/Str
+   :metadata {s/Keyword s/Any}})
 
 (defn validate-creds! [cred]
   (assert (and (string? (:access-key cred))
@@ -24,7 +33,8 @@
                   (re-pattern (str (.getCanonicalPath dir) "/"))
                   ""))
 
-(defn get-bucket-objects [cred bucket-name]
+(s/defn get-bucket-objects :- [BucketObject]
+  [cred bucket-name]
   (validate-creds! cred)
   (->> (loop [objs [(s3/list-objects cred :bucket-name bucket-name)]]
          ;; AR s3/list-objects returns either a map or a vector for some reason
