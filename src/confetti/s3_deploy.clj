@@ -42,7 +42,18 @@
            (if (:truncated? objs)
              (recur (conj objs (s3/list-next-batch-of-objects cred objs)))
              objs)))
-       (mapcat :object-summaries)))
+       (mapcat :object-summaries)
+       (map #(merge (select-keys % [:key :etag])
+                    {:metadata {}}))))
+
+(s/defn get-bucket-object :- BucketObject
+  [cred bucket-name k]
+  (let [metad (s3/get-object-metadata cred bucket-name k)]
+    {:key k
+     :etag (:etag metad)
+     ;; not everything is metadata but doesn't matter much
+     ;; as we'll only compare what's provided in FileMaps
+     :metadata metad}))
 
 (defn dir->file-maps
   "Create a file-map as it's expected by `diff*` from a local directory."
@@ -132,20 +143,28 @@
    the object itself changed, i.e. changes only to an objects
    metadata will not cause the remote object to get updated.
 
-   Recognized options:
-   - `report-fn` takes 2 arguments (type, data) will be called
+   A fourth argument may contain any of the following options:
+   - `:diff-strategy` either `:batch` (default) or `:individual`
+     - `:batch` will not diff on metadata and is faster especially
+       when a large number of file-maps are supplied
+     - `:individual` retrieves metadata for each file-map individually
+       and properly diffs metadata. May take significantly longer.
+   - `:report-fn` takes 2 arguments (type, data) will be called
      for each added and changed file being uploaded to S3.
-   - `dry-run?` if truthy no side effects will be executed.
-   - if `prune?` is a truthy value `sync!` will delete files
+   - `:dry-run?` if truthy no side effects will be executed.
+   - if `:prune?` is a truthy value `sync!` will delete files
      from the S3 bucket that are not in `file-map`."
   ([cred bucket-name file-maps]
    (sync! bucket-name file-maps {}))
-  ([cred bucket-name file-maps {:keys [report-fn prune? dry-run?]}]
+  ([cred bucket-name file-maps {:keys [diff-strategy report-fn prune? dry-run?]}]
    (validate-creds! cred)
    (s/validate [FileMap] file-maps)
    (let [report*   (or report-fn (fn [_]))
          upload*   (partial upload cred bucket-name)
-         objs      (get-bucket-objects cred bucket-name)
+         objs      (case diff-strategy
+                     :batch      (get-bucket-objects cred bucket-name)
+                     :individual (map (partial get-bucket-object cred bucket-name)
+                                      (map :s3-key file-maps)))
          ops       (calculate-ops objs file-maps)]
      (reduce (fn [stats {:keys [s3-key file metadata] :as op}]
                (cond (= ::upload (:op op))
