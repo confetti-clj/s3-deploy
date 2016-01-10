@@ -6,7 +6,7 @@ Simple utility functions to diff and sync local files with S3 buckets.
 
 [](dependency)
 ```clojure
-[confetti/s3-deploy "0.1.0-SNAPSHOT"] ;; latest release
+[confetti/s3-deploy "0.1.0"] ;; latest release
 ```
 [](/dependency)
 

@@ -9,7 +9,7 @@
 
 (require '[adzerk.bootlaces :refer [bootlaces! build-jar push-snapshot push-release]])
 
-(def +version+ "0.1.0-SNAPSHOT")
+(def +version+ "0.1.0")
 (bootlaces! +version+)
 
 (task-options!
