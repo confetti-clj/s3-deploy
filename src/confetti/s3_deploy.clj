@@ -119,7 +119,7 @@
    Recognized options:
    - `report-fn` takes 2 arguments (type, data) will be called
      for each added and changed file being uploaded to S3.
-   - `dry-run?` if truthy no side effects will be executed. 
+   - `dry-run?` if truthy no side effects will be executed.
    - if `prune?` is a truthy value `sync!` will delete files
      from the S3 bucket that are not in `file-map`."
   ([cred bucket-name file-maps]
@@ -145,7 +145,7 @@
                          (update stats :updated conj s3-key))
 
                      (= ::delete (:op op))
-                     (if prune? 
+                     (if prune?
                        (do (report* op)
                            (when-not dry-run?
                              ;; possible optimization: `s3/delete-objects`
@@ -159,9 +159,9 @@
                      :else
                      (throw (ex-info "Unrecognized sync op" op))))
 
-     {:uploaded #{}, :updated #{},
-      :deleted #{}, :unchanged #{}}
-     ops))))
+      {:uploaded #{}, :updated #{},
+       :deleted #{}, :unchanged #{}}
+      ops))))
 
 (defn cloudfront-invalidate!
   "Create an invalidation for `paths` in `dist`."
@@ -183,7 +183,7 @@
 
   (clojure.pprint/pprint
    (map #(s3/get-object-metadata creds bucket %) (map :key bucket-objs)))
-  
+
   (bucket-objects->diff-set bucket-objs)
 
   (clojure.pprint/pprint
@@ -229,6 +229,6 @@
 
   (last (filter #(.isFile %) (file-seq (io/file "."))))
 
-  (s3/put-object "www.martinklepsch.org" "foox-util.clj" f)
+  (s3/put-object "www.martinklepsch.org" "foox-util.clj" f))
 
-  )
+
