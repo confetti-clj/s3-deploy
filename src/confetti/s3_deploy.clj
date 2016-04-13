@@ -27,9 +27,11 @@
 (defn get-bucket-objects [cred bucket-name]
   (validate-creds! cred)
   (->> (loop [objs [(s3/list-objects cred :bucket-name bucket-name)]]
-         (if (:truncated? (last objs))
-           (recur (conj objs (s3/list-next-batch-of-objects cred (last objs))))
-           objs))
+         ;; AR s3/list-objects returns either a map or a vector for some reason
+         (let [objs (if-not (map? objs) objs (last objs))]
+           (if (:truncated? objs)
+             (recur (conj objs (s3/list-next-batch-of-objects cred objs)))
+             objs)))
        (mapcat :object-summaries)))
 
 (defn dir->file-maps
@@ -230,5 +232,3 @@
   (last (filter #(.isFile %) (file-seq (io/file "."))))
 
   (s3/put-object "www.martinklepsch.org" "foox-util.clj" f))
-
-
