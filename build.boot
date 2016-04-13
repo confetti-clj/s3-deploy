@@ -1,6 +1,6 @@
 (set-env!
  :source-paths   #{"src"}
- :dependencies '[[adzerk/bootlaces "0.1.11" :scope "test"]
+ :dependencies '[[adzerk/bootlaces "0.1.13" :scope "test"]
                  [org.clojure/clojure "1.7.0" :scope "provided"]
                  [prismatic/schema "1.0.3"]
                  [amazonica/amazonica "0.3.33"]
