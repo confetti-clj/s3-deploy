@@ -20,9 +20,8 @@
                (string? (:secret-key cred))) cred))
 
 (defn ^:private relative-path [dir f]
-  (string/replace (.getCanonicalPath f)
-                  (re-pattern (str (.getCanonicalPath dir) "/"))
-                  ""))
+  (.getPath
+   (.relativize (.toURI dir) (.toURI f))))
 
 (defn get-bucket-objects [cred bucket-name]
   (validate-creds! cred)
