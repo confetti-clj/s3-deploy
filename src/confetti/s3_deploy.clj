@@ -224,7 +224,7 @@
   (def f (io/file d "about.html"))
   (take 3 (read-dir d))
 
-  (relative-path d (second (file-seq d)))
+  (relative-path d (rand-nth (rest (file-seq d))))
 
   (.getPath d)
 
