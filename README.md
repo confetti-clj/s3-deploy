@@ -2,11 +2,13 @@
 
 # confetti/s3-deploy
 
+[goals](#goals) | [usage](#usage) | [changes](#changes)
+
 Simple utility functions to diff and sync local files with S3 buckets.
 
 [](dependency)
 ```clojure
-[confetti/s3-deploy "0.1.1"] ;; latest release
+[confetti/s3-deploy "0.1.2"] ;; latest release
 ```
 [](/dependency)
 
@@ -57,3 +59,9 @@ Will return a vector of operations needed to get the bucket in sync with
 the supplied `file-maps`.
 
 For more details check [the implementation](https://github.com/confetti-clj/s3-deploy/blob/master/src/confetti/s3_deploy.clj).
+
+## Changes
+
+#### 0.1.2
+
+- improve implementation of `relative-path` function so that it works properly on Windows. ([#16](https://github.com/confetti-clj/s3-deploy/pull/16))
