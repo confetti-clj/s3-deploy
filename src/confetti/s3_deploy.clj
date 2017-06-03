@@ -4,27 +4,35 @@
             [clojure.data :as data]
             [clojure.string :as string]
             [digest :as dig]
-            [schema.core :as s]
+            [taoensso.truss :as truss]
             [pantomime.mime :as panto]
             [amazonica.aws.cloudfront :as cf]
             [amazonica.aws.s3 :as s3]))
 
-(def FileMap
-  "Schema for file-maps"
-  {:s3-key                    s/Str
-   :file                      java.io.File
-   (s/optional-key :metadata) (s/maybe {s/Keyword s/Str})})
+(defn non-blank-string? [s]
+  (and (string? s)
+       (not (string/blank? s))))
 
-(defn validate-creds! [cred]
-  (assert (and (string? (:access-key cred))
-               (string? (:secret-key cred))) cred))
+(defn metadata? [[k v]]
+  (and (keyword? k) (non-blank-string? v)))
+
+(defn have-file-map [filemap]
+  (truss/with-dynamic-assertion-data {:filemap filemap}
+    (truss/have? non-blank-string? (:s3-key filemap))
+    (truss/have? #(instance? java.io.File (:file filemap)))
+    (truss/have? metadata? :in (:metadata filemap)))
+  filemap)
+
+(defn valid-creds? [cred]
+  (and (non-blank-string? (:access-key cred))
+       (non-blank-string? (:secret-key cred))))
 
 (defn ^:private relative-path [dir f]
   (.getPath
    (.relativize (.toURI dir) (.toURI f))))
 
 (defn get-bucket-objects [cred bucket-name]
-  (validate-creds! cred)
+  (truss/have valid-creds? cred)
   (->> (loop [objs [(s3/list-objects cred :bucket-name bucket-name)]]
          ;; AR s3/list-objects returns either a map or a vector for some reason
          (let [objs (if-not (map? objs) objs (last objs))]
@@ -59,7 +67,7 @@
 
    - `file-maps` is a seq of maps containing the following keys: s3-key, file."
   [bucket-objects file-maps]
-  (s/validate [FileMap] file-maps)
+  (truss/have have-file-map :in file-maps)
   (let [on-s3?   #((set (map :key bucket-objects)) (key %))
         on-s3    (bucket-objects->diff-set bucket-objects)
         on-fs    (file-maps->diff-set file-maps)
@@ -91,7 +99,7 @@
 (defn calculate-ops
   "Generate set of operations to get in sync from a given diff"
   [bucket-objects file-maps]
-  (s/validate [FileMap] file-maps)
+  (truss/have have-file-map :in file-maps)
   (let [deduped (dedupe-diff (diff* bucket-objects file-maps))
         fm->op  #(assoc % :op (->op deduped (:s3-key %)))
         rm->op  (fn [[k _]] {:s3-key k :op (->op deduped k)})]
@@ -126,8 +134,8 @@
   ([cred bucket-name file-maps]
    (sync! bucket-name file-maps {}))
   ([cred bucket-name file-maps {:keys [report-fn prune? dry-run?]}]
-   (validate-creds! cred)
-   (s/validate [FileMap] file-maps)
+   (truss/have valid-creds? cred)
+   (truss/have have-file-map :in file-maps)
    (let [report*   (or report-fn (fn [_]))
          upload*   (partial upload cred bucket-name)
          objs      (get-bucket-objects cred bucket-name)
@@ -231,3 +239,19 @@
   (last (filter #(.isFile %) (file-seq (io/file "."))))
 
   (s3/put-object "www.martinklepsch.org" "foox-util.clj" f))
+
+(comment
+  (non-blank-string? "x")
+
+  (def fms
+    [{:s3-key "x"
+      :file   (io/file "xxx")
+      :metadata {:a "xx"}}
+     {:s3-key "a"
+      :file   (io/file "xxx")
+      :metadata {:a ""}}])
+
+  (truss/have valid-creds? {:access-key "x" :secret-key "x"})
+
+
+  )
