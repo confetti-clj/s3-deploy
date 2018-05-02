@@ -118,8 +118,8 @@
    metadata will not cause the remote object to get updated.
 
    Recognized options:
-   - `report-fn` takes 2 arguments (type, data) will be called
-     for each added and changed file being uploaded to S3.
+   - `report-fn` takes 1 argument describing an operation and
+     will be called for each operation modifying the S3 bucket
    - `dry-run?` if truthy no side effects will be executed.
    - if `prune?` is a truthy value `sync!` will delete files
      from the S3 bucket that are not in `file-map`."
