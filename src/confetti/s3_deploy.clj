@@ -13,7 +13,7 @@
   "Schema for file-maps"
   {:s3-key                    s/Str
    :file                      java.io.File
-   (s/optional-key :metadata) (s/maybe {s/Keyword s/Str})})
+   (s/optional-key :metadata) (s/maybe {s/Keyword s/Any})})
 
 (defn validate-creds! [cred]
   (assert (and (string? (:access-key cred))
