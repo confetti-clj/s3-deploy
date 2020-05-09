@@ -2,7 +2,7 @@
  :source-paths   #{"src"}
  :dependencies '[[adzerk/bootlaces "0.1.13" :scope "test"]
                  [org.clojure/clojure "1.7.0" :scope "provided"]
-                 [prismatic/schema "1.0.3"]
+                 [prismatic/schema "1.1.12"]
                  [amazonica "0.3.57" :exclusions [com.amazonaws/aws-java-sdk]]
                  [com.amazonaws/aws-java-sdk-core "1.10.77"]
                  [com.amazonaws/aws-java-sdk-s3 "1.10.77"]
@@ -12,7 +12,7 @@
 
 (require '[adzerk.bootlaces :refer [bootlaces! build-jar push-snapshot push-release]])
 
-(def +version+ "0.1.3")
+(def +version+ "0.1.4")
 (bootlaces! +version+)
 
 (task-options!

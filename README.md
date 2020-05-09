@@ -8,7 +8,7 @@ Simple utility functions to diff and sync local files with S3 buckets.
 
 [](dependency)
 ```clojure
-[confetti/s3-deploy "0.1.3"] ;; latest release
+[confetti/s3-deploy "0.1.4"] ;; latest release
 ```
 [](/dependency)
 
@@ -61,6 +61,10 @@ the supplied `file-maps`.
 For more details check [the implementation](https://github.com/confetti-clj/s3-deploy/blob/master/src/confetti/s3_deploy.clj).
 
 ## Changes
+
+#### 0.1.4
+
+- Update prismatic schema dependency to avoid `Inst` warnings
 
 #### 0.1.3
 
