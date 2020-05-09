@@ -65,7 +65,7 @@ For more details check [the implementation](https://github.com/confetti-clj/s3-d
 
 `s3-deploy` provides a high level API making it attractive for CLI jobs. Here is a minimal example:
 
-```
+```clojure
 ;; cat deploy.clj
 (require '[confetti.s3-deploy :as s3]
          '[clojure.java.io :as io])
