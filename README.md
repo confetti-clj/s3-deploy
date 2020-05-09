@@ -18,6 +18,7 @@ Simple utility functions to diff and sync local files with S3 buckets.
 - useful reporting capabilities to inform users about the sync process
 - allow some ordering of uploads to get "fake-transactionality"
 - allow specification of custom metadata
+- [easy to script](#cli-tools) with Clojure's command line tools
 
 ## Usage
 
@@ -59,6 +60,31 @@ Will return a vector of operations needed to get the bucket in sync with
 the supplied `file-maps`.
 
 For more details check [the implementation](https://github.com/confetti-clj/s3-deploy/blob/master/src/confetti/s3_deploy.clj).
+
+## CLI Tools
+
+`s3-deploy` provides a high level API making it attractive for CLI jobs. Here is a minimal example:
+
+```
+;; cat deploy.clj
+(require '[confetti.s3-deploy :as s3]
+         '[clojure.java.io :as io])
+
+(def dir-to-sync (io/file "public"))
+
+(s3/sync!
+  {:access-key (System/getenv "AWS_ACCESS_KEY")
+   :secret-key (System/getenv "AWS_SECRET_KEY")}
+  (System/getenv "S3_BUCKET_NAME")
+  (s3/dir->file-maps dir-to-sync)
+  {:dry-run? true
+   :report-fn (fn [{:keys [s3-key op]}]
+                (println op s3-key))})
+```
+Which can be ran with:
+```
+clj -Sdeps '{:deps {confetti/s3-deploy {:mvn/version "0.1.3"}}}' deploy.clj
+```
 
 ## Changes
 
