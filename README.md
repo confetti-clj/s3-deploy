@@ -1,6 +1,6 @@
 <img src="https://cloud.githubusercontent.com/assets/97496/11431670/0ef1bb58-949d-11e5-83f7-d07cf1dd89c7.png" alt="confetti logo" align="right" />
 
-# confetti/s3-deploy
+# confetti/s3-deploy [![cljdoc badge](https://cljdoc.org/badge/confetti/s3-deploy)](https://cljdoc.org/d/confetti/s3-deploy)
 
 [goals](#goals) | [usage](#usage) | [changes](#changes)
 
